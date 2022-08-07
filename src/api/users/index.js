@@ -11,6 +11,12 @@ const userRouter = express.Router();
 userRouter.post("/register", async (req, res, next) => {
   try {
     const newUser = new userModel(req.body);
+    if (newUser.email) {
+      const user = await userModel.findOne({ email: newUser.email });
+      if (user) {
+        throw createError(400, "User already exists");
+      }
+    }
     const { _id } = await newUser.save();
     res.status(201).send({ _id });
   } catch (error) {
@@ -152,7 +158,7 @@ userRouter.post("/login", async (req, res, next) => {
       });
       res.send({ accessToken });
     } else {
-      next(createError(401, "Credentials are not ok!"));
+      next(createError(401, "Username or password is incorrect"));
     }
   } catch (error) {
     next(error);

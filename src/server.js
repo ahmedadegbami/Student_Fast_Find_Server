@@ -9,7 +9,8 @@ import {
   unauthorizedHandler,
   forbiddenHandler,
   catchAllHandler,
-  notFoundHandler
+  notFoundHandler,
+  badRequestHandler
 } from "./errorHandlers.js";
 
 const server = express();
@@ -27,7 +28,7 @@ server.use("/users", userRouter);
 server.use("/accomodations", accomdationRouter);
 
 // ***************************************************** ERROR HANDLERS ********************************************
-
+server.use(badRequestHandler);
 server.use(unauthorizedHandler);
 server.use(forbiddenHandler);
 server.use(catchAllHandler);

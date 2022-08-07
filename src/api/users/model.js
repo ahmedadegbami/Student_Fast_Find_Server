@@ -5,9 +5,11 @@ const { Schema, model } = mongoose;
 
 const usersSchema = new Schema(
   {
+    username: { type: String, required: true, unique: true },
     email: { type: String, required: true },
-    role: { type: String, enum: ["host", "guest"], default: "guest" },
-    password: { type: String, required: true }
+    role: { type: String, enum: ["admin", "student"], default: "student" },
+    password: { type: String, required: true },
+    avatar: { type: String, required: false }
   },
   { timestamps: true }
 );
