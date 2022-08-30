@@ -9,28 +9,50 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const productRouter = express.Router();
 
-// const cloudinaryUploader = multer({
-//   storage: new CloudinaryStorage({
-//     cloudinary,
-//     params: {
-//       folder: "products"
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "products"
+    }
+  }),
+  fileFilter: (req, file, multerNext) => {
+    if (file.mimetype !== "image/png" && file.mimetype !== "image/jpeg") {
+      multerNext(createError(400, "Only png allowed!"));
+    } else {
+      multerNext(null, true);
+    }
+  },
+  limits: { fileSize: 1 * 1024 * 1024 } // file size
+}).single("image");
+
+// productRouter.post(
+//   "/",
+//   cloudinaryUploader,
+//   JWTAuthMiddleware,
+//   async (req, res, next) => {
+//     try {
+//       const result = await cloudinary.uploader.upload(req.file.path);
+//       const newProduct = new productModel({
+//         ...req.body,
+//         image: result.secure_url,
+//         cloudinaryId: result.public_id
+//       });
+//       const product = await newProduct.save();
+
+//       res.status(201).send({ product });
+//     } catch (error) {
+//       console.log(error);
+//       next(error);
 //     }
-//   }),
-//   fileFilter: (req, file, multerNext) => {
-//     if (file.mimetype !== "image/jpeg") {
-//       multerNext(createError(400, "Only jpeg allowed!"));
-//     } else {
-//       multerNext(null, true);
-//     }
-//   },
-//   limits: { fileSize: 1 * 1024 * 1024 } // file size
-// }).single("imageUrl");
+//   }
+// );
 
 productRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const newProduct = new productModel(req.body);
-    const { _id } = await newProduct.save();
-    res.status(201).send({ _id });
+    const product = await newProduct.save();
+    res.status(201).send({ product });
   } catch (error) {
     console.log(error);
     next(error);

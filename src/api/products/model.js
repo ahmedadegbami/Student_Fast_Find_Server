@@ -9,6 +9,7 @@ const productsSchema = new Schema(
     price: { type: Number, required: true },
     location: { type: String, required: true },
     image: { type: String, required: true },
+    // cloudinaryId: { type: String, required: true },
     poster: { type: Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
