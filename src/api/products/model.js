@@ -4,11 +4,12 @@ const { Schema, model } = mongoose;
 
 const productsSchema = new Schema(
   {
-    name: { type: String, required: true },
-    host: { type: Schema.Types.ObjectId, ref: "User" },
+    title: { type: String, required: true },
     description: { type: String, required: true },
-    maxGuests: { type: Number, required: true },
-    location: { type: String, required: true }
+    price: { type: Number, required: true },
+    location: { type: String, required: true },
+    image: { type: String, required: true },
+    poster: { type: Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );

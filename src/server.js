@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import listEndpoints from "express-list-endpoints";
 import userRouter from "./api/users/index.js";
-import accomdationRouter from "./api/products/index.js";
+import productRouter from "./api/products/index.js";
 
 import {
   unauthorizedHandler,
@@ -25,7 +25,7 @@ server.use(express.json());
 // ******************************************************* ENDPOINTS ***********************************************
 
 server.use("/users", userRouter);
-server.use("/accomodations", accomdationRouter);
+server.use("/products", productRouter);
 
 // ***************************************************** ERROR HANDLERS ********************************************
 server.use(badRequestHandler);

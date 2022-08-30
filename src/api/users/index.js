@@ -34,37 +34,31 @@ userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
 });
 
 // rerturn the full list of accomodation posted by a host
-userRouter.get(
-  "/me/accomodations",
-  JWTAuthMiddleware,
-  hostOnlyMiddleware,
-  async (req, res, next) => {
-    try {
-      const me = await userModel.findById(req.user._id);
-      if (me.role === "host") {
-        const accomdations = await ProductModel.find({
-          host: req.user._id
-        });
-        res.send(accomdations);
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
+userRouter.get("/me/products", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const modifiedUser = await userModel.findByIdAndUpdate(
-      req.user._id,
-      req.body,
-      { new: true }
-    );
-    res.send(modifiedUser);
+    const me = await userModel.findById(req.user._id);
+    if (me) {
+      const products = await ProductModel.find({ poster: req.user._id });
+      res.send(products);
+    } else {
+      next(createError(404, "User not found"));
+    }
   } catch (error) {
     next(error);
   }
-});
+}),
+  userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
+    try {
+      const modifiedUser = await userModel.findByIdAndUpdate(
+        req.user._id,
+        req.body,
+        { new: true }
+      );
+      res.send(modifiedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
 
 userRouter.delete("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
@@ -160,6 +154,14 @@ userRouter.post("/login", async (req, res, next) => {
     } else {
       next(createError(401, "Username or password is incorrect"));
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post("/logout", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    res.send({ message: "Logout successful" });
   } catch (error) {
     next(error);
   }
