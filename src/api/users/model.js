@@ -9,7 +9,8 @@ const usersSchema = new Schema(
     email: { type: String, required: true, unique: true },
     role: { type: String, enum: ["admin", "student"], default: "student" },
     password: { type: String, required: true },
-    avatar: { type: String, required: false }
+    location: { type: String, required: true },
+    avatar: { type: String, required: true }
   },
   { timestamps: true }
 );

@@ -5,24 +5,82 @@ import ProductModel from "../products/model.js";
 import { hostOnlyMiddleware } from "../../auth/admin.js";
 import { JWTAuthMiddleware } from "../../auth/token.js";
 import { generateAccessToken } from "../../auth/tools.js";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const userRouter = express.Router();
 
-userRouter.post("/register", async (req, res, next) => {
-  try {
-    const newUser = new userModel(req.body);
-    if (newUser.email) {
-      const user = await userModel.findOne({ email: newUser.email });
-      if (user) {
-        throw createError(400, "User already exists");
-      }
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "users"
     }
-    const { _id } = await newUser.save();
-    res.status(201).send({ _id });
+  }),
+  fileFilter: (req, file, multerNext) => {
+    if (file.mimetype !== "image/png" && file.mimetype !== "image/jpeg") {
+      multerNext(createError(400, "Only png allowed!"));
+    } else {
+      multerNext(null, true);
+    }
+  },
+  limits: { fileSize: 1 * 1024 * 1024 } // file size
+}).single("avatar");
+
+userRouter.post("/register", cloudinaryUploader, async (req, res, next) => {
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    const newUser = new userModel({
+      ...req.body,
+      image: result.secure_url,
+      cloudinaryId: result.public_id
+    });
+    const user = await newUser.save();
+
+    res.status(201).send({ user });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 });
+
+userRouter.put(
+  "/me",
+  JWTAuthMiddleware,
+  cloudinaryUploader,
+  async (req, res, next) => {
+    try {
+      const user = await userModel.findById(req.user._id);
+      if (user) {
+        let result;
+        if (req.file) {
+          result = await cloudinary.uploader.upload(req.file.path);
+        }
+        const data = {
+          ...user.toObject(),
+          avatar: result ? result.secure_url : user.avatar,
+
+          ...req.body
+        };
+        const updatedUser = await userModel.findByIdAndUpdate(
+          req.user._id,
+          data,
+          {
+            runValidators: true,
+            new: true
+          }
+        );
+        res.status(200).send({ user: updatedUser });
+      } else {
+        next(createError(404, `User with id ${req.user._id} not found!`));
+      }
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
 
 userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
@@ -46,19 +104,7 @@ userRouter.get("/me/products", JWTAuthMiddleware, async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}),
-  userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
-    try {
-      const modifiedUser = await userModel.findByIdAndUpdate(
-        req.user._id,
-        req.body,
-        { new: true }
-      );
-      res.send(modifiedUser);
-    } catch (error) {
-      next(error);
-    }
-  });
+});
 
 userRouter.delete("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
