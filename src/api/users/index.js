@@ -33,7 +33,7 @@ userRouter.post("/register", cloudinaryUploader, async (req, res, next) => {
     const result = await cloudinary.uploader.upload(req.file.path);
     const newUser = new userModel({
       ...req.body,
-      image: result.secure_url,
+      avatar: result.secure_url,
       cloudinaryId: result.public_id
     });
     const user = await newUser.save();
